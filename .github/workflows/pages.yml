@@ -26,7 +26,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npx playwright install chrome webkit
+      - name: Prepare browsers with native media codecs
+        run: |
+          if [ ! -d "/Applications/Google Chrome.app" ]; then
+            brew install --cask google-chrome
+          fi
+          npx playwright install webkit
       - run: npm run test:e2e
       - run: npm run build
       - uses: actions/configure-pages@v5
