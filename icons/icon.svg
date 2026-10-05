@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>DojoFlow</title>
+  <rect width="512" height="512" fill="#14171e"/>
+  <circle cx="256" cy="256" r="208" fill="#263243"/>
+  <circle cx="256" cy="256" r="194" fill="#14171e"/>
+  <path d="M140 157 216 133 256 168 296 133 372 157 401 230 350 251 328 205 328 369 184 369 184 205 162 251 111 230Z" fill="#ede6d6"/>
+  <path d="m216 133 71 145-31 17-61-154z" fill="#263243"/>
+  <path d="m296 133 21 9-80 158-25-17z" fill="#9ba3ae"/>
+  <path d="M181 283h150v34H181z" fill="#d14836"/>
+  <path d="m253 300 28-2 36 67-29 14z" fill="#d14836"/>
+  <path d="M191 397h130v10H191z" fill="#c9a227"/>
+</svg>

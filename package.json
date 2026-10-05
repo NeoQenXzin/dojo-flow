@@ -1,0 +1,20 @@
+{
+  "name": "dojoflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Entraînements et vidéos, stockés sur ton appareil",
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.cjs",
+    "test:e2e": "playwright test",
+    "fixtures": "node scripts/generate-fixtures.cjs"
+  },
+  "dependencies": {
+    "@ffmpeg/ffmpeg": "0.12.15",
+    "@ffmpeg/core": "0.12.10"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}

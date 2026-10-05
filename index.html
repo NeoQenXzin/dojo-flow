@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#14171e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<title>DojoFlow — Entraînement</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="appError" class="app-error" role="alert" hidden></div>
+<header>
+  <h1 class="display"><span class="kanji">道</span>DojoFlow</h1>
+  <span class="sub" id="dbInfo"></span>
+</header>
+
+<!-- ============ BIBLIOTHÈQUE ============ -->
+<div class="page on" id="page-lib">
+  <button class="btn aka wide" onclick="openExoSheet()">＋ Nouvel exercice</button>
+  <h2>Bibliothèque</h2>
+  <div class="row" style="gap:8px;margin-bottom:10px">
+    <select id="filtArt" aria-label="Filtrer par art" onchange="renderLib()" style="flex:1"><option value="">Tous les arts</option></select>
+    <select id="filtCat" aria-label="Filtrer par catégorie" onchange="renderLib()" style="flex:1"><option value="">Toutes catégories</option></select>
+  </div>
+  <div id="libList"></div>
+</div>
+
+<!-- ============ ENTRAÎNEMENTS ============ -->
+<div class="page" id="page-train">
+  <button class="btn aka wide" onclick="openBuilder(null)">＋ Nouvel entraînement</button>
+  <h2>Mes entraînements</h2>
+  <div id="trainList"></div>
+</div>
+
+<!-- ============ ALÉATOIRE ============ -->
+<div class="page" id="page-rand">
+  <h2>Recette du hasard</h2>
+  <div class="card">
+    <div class="muted" style="margin-bottom:10px">L'appli pioche au hasard dans ta bibliothèque selon cette recette.</div>
+    <div id="recipeRows"></div>
+    <button class="btn ghost small" onclick="addRecipeRow()">＋ Ajouter une ligne</button>
+    <label for="randArt">Limiter à un art (optionnel)</label>
+    <select id="randArt"><option value="">Tous les arts</option></select>
+    <div class="field2">
+      <div>
+        <label for="randRest">Repos entre exos (s)</label>
+        <input type="number" id="randRest" value="15" min="0" max="180">
+      </div>
+      <div>
+        <label for="randPrep">Préparation (s)</label>
+        <input type="number" id="randPrep" value="10" min="0" max="60">
+      </div>
+    </div>
+    <button class="btn aka wide" onclick="generateRandom()">🎲 Générer</button>
+  </div>
+  <div id="randResult"></div>
+</div>
+
+<!-- ============ DONNÉES ============ -->
+<div class="page" id="page-data">
+  <h2>Stockage local</h2>
+  <div class="card">
+    <div class="row"><div class="grow">Espace utilisé</div><div class="muted" id="storText">—</div></div>
+    <div class="gauge-bar"><div id="storBar"></div></div>
+    <div class="muted" id="persistText" style="margin-top:8px">Vérification du stockage persistant…</div>
+    <button class="btn ghost wide" id="persistBtn" style="display:none" onclick="askPersist()">🔒 Activer le stockage persistant</button>
+  </div>
+  <h2>Diagnostic</h2>
+  <div class="card">
+    <div class="muted" id="envInfo" style="margin-bottom:10px">…</div>
+    <div class="row">
+      <video id="diagVid" playsinline webkit-playsinline muted loop style="width:64px;height:64px;border-radius:8px;background:#000;border:1px solid var(--line);flex-shrink:0"></video>
+      <div class="grow">
+        <div style="font-size:14px;font-weight:600">Test vidéo intégré</div>
+        <div class="muted" id="diagRes">Lance le test : une mini-vidéo MP4 H.264 embarquée dans l'appli doit se lire ici.</div>
+      </div>
+      <button class="btn small" onclick="runDiag()">Tester</button>
+    </div>
+  </div>
+  <h2>Journal des séances</h2>
+  <div class="card" id="journalCard">
+    <div class="muted">Aucune séance terminée pour l'instant.</div>
+  </div>
+  <h2>Sauvegarde &amp; restauration</h2>
+  <div class="card">
+    <div class="muted" style="margin-bottom:10px">Exporte un fichier JSON (compatible Syncthing / disque). L'export complet embarque les vidéos en base64 : fichier lourd mais autonome.</div>
+    <button class="btn wide" id="expFullBtn" onclick="exportData(true)">⬇︎ Export complet (avec vidéos)</button>
+    <button class="btn ghost wide" onclick="exportData(false)">⬇︎ Export léger (données seules)</button>
+    <label for="impFile">Restaurer une sauvegarde</label>
+    <input type="file" id="impFile" accept=".json,application/json" style="width:100%;color:var(--gi-dim)">
+    <div class="row" style="margin-top:10px">
+      <button class="btn ghost grow" onclick="importData('merge')">Fusionner</button>
+      <button class="btn grow" onclick="importData('replace')">Remplacer tout</button>
+    </div>
+    <div class="muted" id="impStatus" style="margin-top:8px"></div>
+  </div>
+  <div class="muted" style="padding:0 4px;line-height:1.5">Tout vit dans ce navigateur (IndexedDB), rien ne part dans le cloud. Pense à exporter régulièrement : un « Réinitialiser Safari » ou un manque d'espace peut purger les données locales.</div>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <button class="on" data-p="lib" onclick="go('lib')"><span class="ico">技</span>Exercices</button>
+  <button data-p="train" onclick="go('train')"><span class="ico">形</span>Entraînements</button>
+  <button data-p="rand" onclick="go('rand')"><span class="ico">運</span>Aléatoire</button>
+  <button data-p="data" onclick="go('data')"><span class="ico">蔵</span>Données</button>
+</nav>
+
+<!-- ============ FEUILLE : EXERCICE ============ -->
+<div class="sheet-bg" id="sheetBg" onclick="closeSheets()"></div>
+<div class="sheet" id="exoSheet" role="dialog" aria-modal="true" aria-labelledby="exoTitle" aria-hidden="true" tabindex="-1">
+  <div class="handle"></div>
+  <h3 id="exoTitle">Nouvel exercice</h3>
+  <label for="exName">Nom</label>
+  <input maxlength="200" type="text" id="exName" placeholder="Ex. 1000 coupes de sabre">
+  <div class="field2">
+    <div>
+      <label for="exArt">Art / discipline</label>
+      <input type="text" id="exArt" maxlength="100" list="artsDl" placeholder="Sabre, Capoeira…">
+      <datalist id="artsDl"></datalist>
+    </div>
+    <div>
+      <label for="exCat">Catégorie</label>
+      <input type="text" id="exCat" maxlength="100" list="catsDl" placeholder="Kata, Gumbop…">
+      <datalist id="catsDl"></datalist>
+    </div>
+  </div>
+  <label>Type d'exercice</label>
+  <div class="seg" id="modeSeg">
+    <button data-m="timer" class="on" onclick="setMode('timer')">⏱ Chrono</button>
+    <button data-m="reps" onclick="setMode('reps')">🔢 Répétitions</button>
+  </div>
+  <div id="timerFields">
+    <label for="exDur">Durée (secondes)</label>
+    <input type="number" id="exDur" value="60" min="5" max="7200">
+  </div>
+  <div id="repsFields" style="display:none">
+    <div class="field2">
+      <div>
+        <label for="exReps">Répétitions</label>
+        <input type="number" id="exReps" value="100" min="1" max="10000" list="repsDl">
+        <datalist id="repsDl"><option value="10"><option value="100"><option value="1000"></datalist>
+      </div>
+      <div>
+        <label for="exTempo">Tempo (sec / rép.)</label>
+        <input type="number" id="exTempo" value="1.5" min="0.4" max="20" step="0.1">
+      </div>
+    </div>
+    <label for="exCount">Comptage</label>
+    <select id="exCount" onchange="updateCountInfo()">
+      <option value="metro">Métronome (tic + gong aux dizaines)</option>
+      <option value="fr">Voix — Français</option>
+      <option value="en">Voix — Anglais</option>
+      <option value="ja">Voix — Japonais</option>
+      <option value="ko">Voix — Coréen</option>
+    </select>
+    <div class="row" style="margin-top:6px">
+      <div class="muted grow" id="exCountInfo">La voix compte 1 à 9 puis annonce 10, 20, 30…</div>
+      <button class="btn small ghost" onclick="testCount()">🔊 Tester</button>
+    </div>
+  </div>
+  <label>Vidéo (optionnelle, stockée en local)</label>
+  <video id="exVidPrev" controls playsinline muted style="display:none;width:100%;border-radius:10px;background:#000;margin-bottom:8px;max-height:220px"></video>
+  <input type="file" id="exVid" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.m4v,.webm,.mkv,video/*" style="width:100%;color:var(--gi-dim)">
+  <div class="muted" id="exVidInfo" style="margin-top:6px"></div>
+  <button class="btn ghost wide" id="convBtn" style="display:none" onclick="convertToMp4()">Convertir en MP4 pour iPhone</button>
+  <button class="btn ghost wide" id="cancelConvBtn" hidden onclick="cancelConversion()">Annuler la conversion</button>
+  <button class="btn ghost wide" id="removeVideoBtn" hidden onclick="removeVideo()">Retirer la vidéo</button>
+  <p class="muted" style="margin-top:8px;line-height:1.5">MP4, MKV et WebM. Les MKV, WebM et vidéos incompatibles sont convertis sur ton appareil. Pour les longues vidéos, prépare plutôt un MP4 H.264 sur ordinateur. La vidéo de démonstration est muette pendant la séance.</p>
+  <label for="exNotes">Notes</label>
+  <textarea maxlength="10000" id="exNotes" rows="2" placeholder="Consignes, points clés…"></textarea>
+  <div class="row" style="margin-top:16px">
+    <button class="btn ghost grow" onclick="closeSheets()">Annuler</button>
+    <button class="btn aka grow" id="exSaveBtn" onclick="saveExo()">Enregistrer</button>
+  </div>
+  <button class="btn ghost wide" id="exDelBtn" style="color:var(--aka);display:none" onclick="deleteExo()">Supprimer cet exercice</button>
+</div>
+
+<!-- ============ FEUILLE : CONSTRUCTEUR ============ -->
+<div class="sheet" id="buildSheet" role="dialog" aria-modal="true" aria-labelledby="buildTitle" aria-hidden="true" tabindex="-1">
+  <div class="handle"></div>
+  <h3 id="buildTitle">Nouvel entraînement</h3>
+  <label for="wName">Nom de l'entraînement</label>
+  <input maxlength="200" type="text" id="wName" placeholder="Ex. Session sabre du matin">
+  <div class="field2">
+    <div>
+      <label for="wRest">Repos entre exos (s)</label>
+      <input type="number" id="wRest" value="15" min="0" max="180">
+    </div>
+    <div>
+      <label for="wPrep">Préparation (s)</label>
+      <input type="number" id="wPrep" value="10" min="0" max="60">
+    </div>
+  </div>
+  <h2>Séquence</h2>
+  <div id="wSeq"></div>
+  <label>Ajouter un exercice</label>
+  <div class="row">
+    <select id="wPick" class="grow"></select>
+    <button class="btn small" onclick="builderAdd()">Ajouter</button>
+  </div>
+  <div class="row" style="margin-top:16px">
+    <button class="btn ghost grow" onclick="closeSheets()">Annuler</button>
+    <button class="btn aka grow" onclick="saveWorkout()">Enregistrer</button>
+  </div>
+  <button class="btn ghost wide" id="wDelBtn" style="color:var(--aka);display:none" onclick="deleteWorkout()">Supprimer cet entraînement</button>
+</div>
+
+<!-- ============ LECTEUR ============ -->
+<div id="player">
+  <video id="pVideo" playsinline webkit-playsinline muted loop></video>
+  <div id="pShade"></div>
+  <div id="pFlash"></div>
+  <div id="pProg"></div>
+  <div id="pNoVid"><span class="kanji">道</span><span id="pNoVidTxt"></span></div>
+  <div id="pTop">
+    <div class="grow">
+      <div id="pStep" class="display">Exercice 1 / 5</div>
+      <div id="pName" class="display">—</div>
+      <div id="pNext"></div>
+    </div>
+    <button id="pClose" aria-label="Fermer la séance" onclick="stopPlayer()">✕</button>
+  </div>
+  <div id="pMsg"></div>
+  <div id="pGaugeWrap">
+    <div id="pGauge">
+      <svg viewBox="0 0 200 200">
+        <circle id="ringBg" cx="100" cy="100" r="88" fill="none" stroke-width="9"/>
+        <circle id="ring" cx="100" cy="100" r="88" fill="none" stroke-width="9"/>
+      </svg>
+      <div id="pTime"><span id="pClock">0:00</span><span class="sub-count" id="pSub"></span><small id="pPhase">en cours</small></div>
+    </div>
+  </div>
+  <div id="pCtrls">
+    <button onclick="toggleVoice()" id="pVoiceBtn" title="Sons et voix">🔊</button>
+    <button onclick="restartStep()" title="Recommencer l'étape">↺</button>
+    <button class="main" onclick="togglePause()" id="pPauseBtn" aria-label="Pause ou reprise">⏸</button>
+    <button onclick="skipStep()" title="Passer">⏭</button>
+  </div>
+</div>
+
+<script src="storage.js" defer></script>
+<script src="app.js" defer></script>
+<script src="player.js" defer></script>
+<script src="media.js" defer></script>
+<script src="pwa.js" defer></script>
+</body>
+</html>
