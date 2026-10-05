@@ -22,7 +22,7 @@ npm run build
 
 `dist/` contient le site prêt à publier, y compris le moteur de conversion. Le build copie les dépendances FFmpeg installées par npm ; aucun CDN externe n’est nécessaire à l’exécution. Les chemins sont relatifs : le site fonctionne à la racine d’un domaine comme sous `/DojoFlow/`.
 
-Pour les tests de navigateur, installer Chromium avec `npx playwright install chromium webkit`, puis lancer `npm run test:e2e`. Ces tests automatisés ne remplacent pas une vérification sur l’iPhone cible, notamment pour le son, les codecs et les limites de mémoire.
+Pour les tests de navigateur, installer Chrome et WebKit avec `npx playwright install chrome webkit`, puis lancer `npm run test:e2e`. La CI multimédia utilise macOS et Chrome (H.264 n’est pas présent dans toutes les distributions de Chromium). Ces tests automatisés ne remplacent pas une vérification sur l’iPhone cible, notamment pour le son, les codecs et les limites de mémoire.
 
 ## Vidéos : MP4, MKV et WebM
 

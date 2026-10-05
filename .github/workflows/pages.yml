@@ -16,7 +16,8 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Safari/WebKit media uses the macOS codec stack; branded Chrome includes H.264.
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,7 +26,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright install chrome webkit
       - run: npm run test:e2e
       - run: npm run build
       - uses: actions/configure-pages@v5
